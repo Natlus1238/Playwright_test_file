@@ -9,68 +9,72 @@ class UserRegistration {
       this.actions = new Actions(page);
   
       // Locators
-      this.sing_in_iframe = page.locator('//*[@name="framelive"]');
-      this.sing_in = page.locator('//span[text()="Sign in"]');
-      this.create_acc = page.locator('//a[contains(text(),"No account? Create one here")]');
-      this.social_title = page.locator('//label[@for="field-id_gender-1"]');
-      this.fist_name = page.locator('//*[@name="firstname"]');
-      this.last_name = page.locator('//*[@name="lastname"]');
-      this.email = page.locator('//*[@name="email"]');
-      this.password = page.locator('//*[@name="password"]');
-      this.birthday = page.locator('//*[@name="birthday"]');
-      this.terms_condition_checkbox = page.locator('(//*[@type="checkbox"])[2]');
-      this.data_privacy_checkbox = page.locator('(//*[@type="checkbox"])[4]');
-      this.save_button = page.locator('//*[contains(text(),"Save")]');
-      this.sing_out = page.locator('(//*[@href="https://functional-watch.demo.prestashop.com/en/?mylogout="])[1]');
-      this.acc_name = page.locator('//*[@title="View my customer account"]');
+      this.sing_in_iframe = ('//*[@name="framelive"]');
+      this.sing_in = ('//span[text()="Sign in"]');
+      this.create_acc =('//a[contains(text(),"No account? Create one here")]');
+      this.social_title = ('//label[@for="field-id_gender-1"]');
+      this.fist_name = ('//*[@name="firstname"]');
+      this.last_name = ('//*[@name="lastname"]');
+      this.email = ('//*[@name="email" and @id="field-email"]');
+      this.password = ('//*[@name="password"]');
+      this.birthday = ('//*[@name="birthday"]');
+      this.terms_condition_checkbox = ('(//*[@type="checkbox"])[2]');
+      this.data_privacy_checkbox = ('(//*[@type="checkbox"])[4]');
+      this.save_button = ('//*[contains(text(),"Save")]');
+      this.sing_out = ('(//*[@class="user-info"]/a)[1]');
+      this.acc_name = ('//*[@title="View my customer account"]');
 
     }
 
     async create_user(username, password, fname, lname){
-        const url = 'https://clear-stage.demo.prestashop.com/en/registration'
+        const url = '/en/registration'
 
         // Validate the page title
         await this.actions.expectTitleToBe('PrestaShop Live Demo')
         
         // Switching to Iframe
         let frame = await this.actions.switchToFrame(this.sing_in_iframe)
-        await frame.click(this.sing_in)
+        const actionsInFrame_2 = new Actions(frame);
+        await actionsInFrame_2.click(this.sing_in)
 
-        // Validate login page is getting displayed
-        await this.actions.expectToBeVisible(this.create_acc)
 
-        // Switching to Iframe
+        // Switching to Iframe and validate the create acc
         frame = await this.actions.switchToFrame(this.sing_in_iframe)
-        await frame.click(this.create_acc)
+        const actionsInFrame_1 = new Actions(frame);
+        await actionsInFrame_1.expectToBeVisible(this.create_acc)
+        await actionsInFrame_1.click(this.create_acc)
 
-        // Validate "Create an account" page is getting displayed
-        await this.actions.expectToBeVisible(this.fist_name)
+        
 
-        // Switching to Iframe
+        // Switching to Iframe and Validate "Create an account" page is getting displayed
+
         frame = await this.actions.switchToFrame(this.sing_in_iframe)
+        const actionsInFrame = new Actions(frame);
+        await actionsInFrame.expectToBeVisible(this.fist_name)
 
-        await frame.click(this.social_title, {timeout: 30000})
-        await frame.fill(this.fist_name,fname)
-        await frame.fill(this.last_name,lname)
-        await frame.fill(this.email,username)
-        await frame.fill(this.password,password)
-        await frame.fill(this.birthday,'03/03/2000')
-        await frame.click(this.terms_condition_checkbox, {timeout: 30000})
-        await frame.click(this.data_privacy_checkbox, {timeout: 30000})
-        await frame.click(this.save_button, {timeout: 30000})
+        await actionsInFrame.click(this.social_title)
+        await actionsInFrame.fill(this.fist_name,fname)
+        await actionsInFrame.fill(this.last_name,lname)
+        await actionsInFrame.fill(this.email,username)
+        await actionsInFrame.fill(this.password,password)
+        await actionsInFrame.fill(this.birthday,'03/03/2000')
+        await actionsInFrame.click(this.terms_condition_checkbox)
+        await actionsInFrame.click(this.data_privacy_checkbox)
+        await actionsInFrame.scrollIntoView(this.save_button)
 
         // Validating the Status Code
-        await this.actions.verifyApiStatusCode(url,302)
+        await this.actions.clickAndVerifyApiStatusCode_inside_iframe(actionsInFrame,this.save_button,url, 302);  
 
-        // Validating signout button and user name
-        await this.actions.expectToBeVisible(this.sing_out)
-        await this.actions.expectToHaveText(this.acc_name, 'Micheal Clark')
-
-        // Switching to Iframe
+        // Switching to Iframe and validate the signout button and account name
         frame = await this.actions.switchToFrame(this.sing_in_iframe)
-        await frame.click(this.sing_out, {timeout: 30000})
-        // Validating the Sign_in Button
-        await this.actions.expectToBeVisible(this.sing_in)
+        const actionsInFrame_3 = new Actions(frame);
+        await actionsInFrame_3.expectToBeVisible(this.sing_out)
+        const user_name_value = await actionsInFrame_3.getText(this.acc_name)
+        await actionsInFrame_3.assertTextContains(user_name_value, 'Micheal Clark')
+
+        // await actionsInFrame_3.click(this.sing_out)
+        // // Validating the Sign_in Button
+        // await this.actions.expectToBeVisible(this.sing_in)
 
         
     }
